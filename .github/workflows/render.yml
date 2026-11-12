@@ -18,6 +18,8 @@ jobs:
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
     services:
       voicevox:
         image: voicevox/voicevox_engine:cpu-latest
@@ -49,3 +51,19 @@ jobs:
           name: shorts
           path: out/*.mp4
           retention-days: 14
+
+      - name: 動画を videos ブランチにも保存（Claudeが取り出せるように）
+        run: |
+          mkdir -p /tmp/v && cp out/*.mp4 /tmp/v/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+          git fetch origin videos || true
+          if git rev-parse --verify origin/videos >/dev/null 2>&1; then
+            git checkout -B videos origin/videos
+          else
+            git checkout --orphan videos && git rm -rfq . && git clean -fdq
+          fi
+          mkdir -p latest && rm -f latest/*.mp4 && cp /tmp/v/*.mp4 latest/
+          git add latest
+          git commit -qm "書き出し ${GITHUB_SHA::7}" || echo "変更なし"
+          git push -q origin videos
