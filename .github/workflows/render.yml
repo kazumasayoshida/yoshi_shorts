@@ -1,6 +1,12 @@
 name: ショート動画を書き出す
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts.json"
+      - "*.py"
+      - ".github/workflows/render.yml"
   workflow_dispatch:
     inputs:
       ids:
